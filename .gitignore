@@ -1,0 +1,21 @@
+# Firmware (CMake / Ninja)
+/build/
+
+# UF2 copied to repo root on POST_BUILD (build locally; do not commit binaries)
+/*.uf2
+
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Python virtual environments
+.venv/
+venv/
+
+# PyInstaller (gui/)
+gui/build/
+gui/dist/
+
+# Local agent handoff notes (session context; not for the repo)
+handoff.md

@@ -1,0 +1,53 @@
+/*
+ * SEGA IO4 Slider Protocol Definitions
+ * Ported from skogaslider-firmware by skogaby
+ * Adapted for simpl-slidrr-firmware
+ */
+
+#ifndef SEGA_PROTOCOL_H
+#define SEGA_PROTOCOL_H
+
+#include <stdint.h>
+
+/** First byte of every packet sent to and from the slider to the host application */
+#define SLIDER_PACKET_BEGIN 0xFF
+/** Byte used to escape any reserved bytes in a packet */
+#define SLIDER_PACKET_ESCAPE 0xFD
+
+/**
+ * @brief Command IDs for the SEGA slider protocol.
+ */
+enum SliderCommandId {
+    /** Request from the host for a readout of the sensor pressures */
+    SLIDER_REPORT = 0x01,
+    /** Packet from the host to set the LEDs to the given state */
+    LED_REPORT = 0x02,
+    /** Packet from the host to enable the device to start sending slider reports */
+    ENABLE_SLIDER_REPORT = 0x03,
+    /** Request from the host to disable automatic slider reports */
+    DISABLE_SLIDER_REPORT = 0x04,
+    /** Request from the host to reset the slider */
+    SLIDER_RESET = 0x10,
+    /** Request from the host to return the hardware information about the slider */
+    GET_HW_INFO = 0xF0,
+    /** Request to set the offset for raw count reports */
+    SET_SHORT_RAW_COUNT_OFFSET = 0x09,
+    /** Request to set the shifts for raw count reports */
+    SET_SHORT_RAW_COUNT_SHIFT = 0x0A,
+};
+
+/**
+ * @brief Represents a single packet sent between the slider and the host device.
+ */
+typedef struct {
+    /** The opcode for the packet */
+    uint8_t command_id;
+    /** The length of the packet's report body / the length of the data field */
+    uint8_t length;
+    /** The report body, can be empty */
+    uint8_t *data;
+    /** The checksum for the packet, should be calculated immediately before sending */
+    uint8_t checksum;
+} SliderPacket;
+
+#endif // SEGA_PROTOCOL_H
