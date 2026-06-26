@@ -1,6 +1,6 @@
 # simpl-slidrr-firmware
 
-Firmware for **simpl-slirr** that emulates **native SEGA IO4 + slider serial** on a single Raspberry Pi Pico.
+Firmware for **simpl-slirr** that emulates the **IO4 board + slider serial** on a single Raspberry Pi Pico.
 
 > [!Warning]
 > ### Disclosure of usage of Agentic AI Coding
@@ -46,7 +46,7 @@ enable=0
 |-----------|-------------|---------|
 | HID | *(IO4 board name goes here)* | Game input — air keys + aux buttons |
 | CDC 0 | `simpl-slidrr CLI Port` | Text CLI (`stdio_usb`) |
-| CDC 1 | `simpl-slidrr Slider Port` | Native SEGA slider serial |
+| CDC 1 | `simpl-slidrr Slider Port` | Slider serial port |
 | CDC 2 | `simpl-slidrr AIME Port` | NFC / AIME passthrough |
 | CDC 3 | `simpl-slidrr config port` | SMPL binary config protocol |
 
