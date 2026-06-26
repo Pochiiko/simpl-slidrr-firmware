@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QRectF
+from PySide6.QtGui import QColor, QPainter, QPainterPath, QPen
 from PySide6.QtWidgets import (
     QFrame,
     QGridLayout,
@@ -34,6 +35,75 @@ _TILE_ACTIVE = "#1b5e20"
 _AIR_TRACK = "#1a2744"
 _AIR_IDLE = "#2a5080"
 _AIR_ACTIVE = "#4fc3f7"
+_AIR_MARKER = "#f08040"
+
+_ADC_MAX = 4095
+
+
+class _BeamWidget(QWidget):
+    """Horizontal fill bar with a threshold marker line.
+
+    Fill level = ir_raw / _ADC_MAX.
+    Marker position = firmware trigger threshold: base * (100 - trigger_pct) / 100.
+    """
+
+    def __init__(self, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self._raw = 0
+        self._blocked = False
+        self._base = 3800
+        self._trigger_pct = 20
+        self.setFixedHeight(12)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+
+    def set_state(self, raw: int, blocked: bool) -> None:
+        if raw != self._raw or blocked != self._blocked:
+            self._raw = raw
+            self._blocked = blocked
+            self.update()
+
+    def set_config(self, base: int, trigger_pct: int) -> None:
+        if base != self._base or trigger_pct != self._trigger_pct:
+            self._base = base
+            self._trigger_pct = trigger_pct
+            self.update()
+
+    def set_trigger_pct(self, pct: int) -> None:
+        if pct != self._trigger_pct:
+            self._trigger_pct = pct
+            self.update()
+
+    def paintEvent(self, _event) -> None:
+        p = QPainter(self)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        w, h = self.width(), self.height()
+        rect = QRectF(self.rect()).adjusted(0, 0, -1, -1)
+        radius = 4.0
+
+        track_path = QPainterPath()
+        track_path.addRoundedRect(rect, radius, radius)
+
+        p.fillPath(track_path, QColor(_AIR_TRACK))
+
+        fill_w = max(0.0, min(float(w), float(w) * self._raw / _ADC_MAX))
+        if fill_w > 0:
+            fill_color = QColor(_AIR_ACTIVE if self._blocked else _AIR_IDLE)
+            p.save()
+            p.setClipPath(track_path)
+            p.fillRect(QRectF(0, 0, fill_w, float(h)), fill_color)
+            p.restore()
+
+        border = QColor("#81d4fa" if self._blocked else _AIR_TRACK)
+        p.setPen(QPen(border, 1))
+        p.setBrush(Qt.BrushStyle.NoBrush)
+        p.drawRoundedRect(rect, radius, radius)
+
+        threshold_raw = self._base * (100 - self._trigger_pct) / 100 if self._base > 0 else 0
+        mx = max(2, min(w - 3, round(w * threshold_raw / _ADC_MAX)))
+        p.setPen(QPen(QColor(_AIR_MARKER), 2))
+        p.drawLine(mx, 1, mx, h - 2)
+
+        p.end()
 
 
 class _AirStringBar(QWidget):
@@ -51,13 +121,7 @@ class _AirStringBar(QWidget):
         num.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
         num.setStyleSheet("color: #8ab4f8; font-weight: bold;")
 
-        self._beam = QFrame()
-        self._beam.setFixedHeight(12)
-        self._beam.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        self._beam.setFrameShape(QFrame.Shape.NoFrame)
-        self._beam.setStyleSheet(
-            f"background-color: {_AIR_IDLE}; border-radius: 4px; border: 1px solid {_AIR_TRACK};"
-        )
+        self._beam = _BeamWidget()
 
         self._raw = QLabel("—")
         self._raw.setFixedWidth(44)
@@ -70,14 +134,13 @@ class _AirStringBar(QWidget):
 
     def set_state(self, raw: int, blocked: bool) -> None:
         self._raw.setText(str(raw))
-        if blocked:
-            self._beam.setStyleSheet(
-                f"background-color: {_AIR_ACTIVE}; border-radius: 4px; border: 1px solid #81d4fa;"
-            )
-        else:
-            self._beam.setStyleSheet(
-                f"background-color: {_AIR_IDLE}; border-radius: 4px; border: 1px solid {_AIR_TRACK};"
-            )
+        self._beam.set_state(raw, blocked)
+
+    def set_config(self, base: int, trigger_pct: int) -> None:
+        self._beam.set_config(base, trigger_pct)
+
+    def set_trigger_pct(self, pct: int) -> None:
+        self._beam.set_trigger_pct(pct)
 
 
 class _KeyTile(QFrame):
@@ -166,6 +229,15 @@ class TelemetryPanel(QWidget):
                 keys_grid.addWidget(tile, row, col)
 
         root.addWidget(keys_wrap, alignment=Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignHCenter)
+
+    def set_air_config(self, ir_base: list[int], trigger_pct: int) -> None:
+        for bar in self._air_bars:
+            i = 5 - bar.sensor_index
+            bar.set_config(ir_base[i], trigger_pct)
+
+    def set_air_trigger_pct(self, pct: int) -> None:
+        for bar in self._air_bars:
+            bar.set_trigger_pct(pct)
 
     def update_telemetry(self, telem: Telemetry) -> None:
         for i, cell in enumerate(self._cells):

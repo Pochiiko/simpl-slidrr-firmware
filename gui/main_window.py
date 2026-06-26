@@ -131,6 +131,11 @@ class MainWindow(QMainWindow):
         )
         self._config_editor._factory_btn.clicked.connect(self._factory_reset)
 
+        self._config_editor._ir_trig_slider.valueChanged.connect(
+            self._telemetry_panel.set_air_trigger_pct
+        )
+        self._telemetry_panel.set_air_trigger_pct(self._config_editor._ir_trig_slider.value())
+
         self._telemetry_panel.setSizePolicy(
             QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum
         )
@@ -261,6 +266,7 @@ class MainWindow(QMainWindow):
 
     def _on_config_loaded(self, cfg: ChuConfig) -> None:
         self._config_editor.set_config(cfg)
+        self._telemetry_panel.set_air_config(cfg.ir_base, cfg.ir_trigger[0])
 
     def _on_operation_finished(self, name: str, status: str) -> None:
         self._show_status(f"{name}: {status}", 4000)
