@@ -3,7 +3,7 @@
 Firmware for **simpl-slirr** that emulates the **IO4 board + slider serial** on a single Raspberry Pi Pico.
 
 > [!Warning]
-> ### Disclosure of usage of Agentic AI Coding
+> ### Disclosure for usage of Agentic AI Coding
 > Much of this repo was vibe-coded with AI assistance. It builds and runs on real hardware, but treat it as a community fork — report issues if something breaks.
 
 ## About
