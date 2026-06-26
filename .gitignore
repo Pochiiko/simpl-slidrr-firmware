@@ -19,3 +19,5 @@ gui/dist/
 
 # Local agent handoff notes (session context; not for the repo)
 handoff.md
+
+.claude/
