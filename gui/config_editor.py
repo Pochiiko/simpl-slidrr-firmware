@@ -118,7 +118,7 @@ class ConfigEditor(QWidget):
         self._deb_release_slider.valueChanged.connect(self._on_edit)
         layout.addWidget(self._deb_release_row)
 
-        adv_btn = QPushButton("Per-key sensesitivity and filter settings…")
+        adv_btn = QPushButton("Per-key sensitivity and filter settings…")
         adv_btn.clicked.connect(self._open_advanced)
         layout.addWidget(adv_btn)
         layout.addStretch()
