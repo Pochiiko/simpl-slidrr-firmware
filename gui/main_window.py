@@ -81,8 +81,8 @@ class MainWindow(QMainWindow):
         tb.addWidget(self._connect_btn)
 
         tb.addSeparator()
-        self._apply_btn = QPushButton("Apply")
-        self._apply_btn.setToolTip("Send dirty config sections to device (RAM; auto-save ~5s)")
+        self._apply_btn = QPushButton("Apply to device")
+        self._apply_btn.setToolTip("Writes changes to device RAM only. Power cycle will revert unless you also Save.")
         self._apply_btn.clicked.connect(self._apply_config)
         tb.addWidget(self._apply_btn)
 
@@ -90,9 +90,15 @@ class MainWindow(QMainWindow):
         self._reload_btn.clicked.connect(lambda: self._worker.refresh_requested.emit())
         tb.addWidget(self._reload_btn)
 
-        self._save_btn = QPushButton("Save")
+        self._save_btn = QPushButton("Save to flash")
+        self._save_btn.setToolTip("Persists the current device config to non-volatile flash.")
         self._save_btn.clicked.connect(lambda: self._worker.save_requested.emit())
         tb.addWidget(self._save_btn)
+
+        self._unsaved_label = QLabel("● unsaved")
+        self._unsaved_label.setStyleSheet("color: #f0a040; font-size: 11px; padding: 0 4px;")
+        self._unsaved_label.setVisible(False)
+        tb.addWidget(self._unsaved_label)
 
     def _build_branding_header(self) -> QWidget:
         header = QWidget()
@@ -123,11 +129,19 @@ class MainWindow(QMainWindow):
         self._telemetry_panel.setSizePolicy(
             QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum
         )
+        self._connect_hint = QLabel(
+            "To get started:  1. Plug in the device via USB  ·  "
+            "2. Click Refresh  ·  3. Select the port  ·  4. Click Connect"
+        )
+        self._connect_hint.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._connect_hint.setStyleSheet("color: #555; font-size: 12px; padding: 8px 0;")
+
         central = QWidget()
         layout = QVBoxLayout(central)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(4)
         layout.addWidget(self._build_branding_header())
+        layout.addWidget(self._connect_hint)
         layout.addWidget(self._telemetry_panel, alignment=Qt.AlignmentFlag.AlignTop)
         layout.addStretch(1)
         layout.addWidget(bottom)
@@ -194,13 +208,12 @@ class MainWindow(QMainWindow):
         self._worker.apply_requested.emit(cfg, flags)
 
     def _factory_reset(self) -> None:
-        answer = QMessageBox.question(
-            self,
-            "Factory reset",
-            "Restore all settings to firmware defaults and save immediately?",
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-        )
-        if answer == QMessageBox.StandardButton.Yes:
+        msg = QMessageBox(self.window())
+        msg.setWindowTitle("Factory reset")
+        msg.setText("Restore all settings to firmware defaults and save immediately?\nThis cannot be undone.")
+        msg.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+        msg.setDefaultButton(QMessageBox.StandardButton.No)
+        if msg.exec() == QMessageBox.StandardButton.Yes:
             self._worker.factory_reset_requested.emit()
 
     def _on_telemetry(self, telem) -> None:
@@ -235,6 +248,7 @@ class MainWindow(QMainWindow):
         self._show_status(message, 8000)
 
     def _set_connected_ui(self, connected: bool) -> None:
+        self._connect_hint.setVisible(not connected)
         self._connect_btn.setText("Disconnect" if connected else "Connect")
         self._port_combo.setEnabled(not connected)
         self._refresh_btn.setEnabled(not connected)
@@ -253,3 +267,4 @@ class MainWindow(QMainWindow):
         connected = self._connect_btn.text() == "Disconnect"
         dirty = self._config_editor.is_dirty()
         self._apply_btn.setEnabled(connected and dirty)
+        self._unsaved_label.setVisible(connected and dirty)

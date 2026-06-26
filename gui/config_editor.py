@@ -51,6 +51,7 @@ def _slider_row(
     maximum: int,
     value: int,
     suffix: str = "",
+    display_offset: int = 0,
 ) -> tuple[QWidget, QSlider, QLabel]:
     """Label + horizontal slider + live value readout."""
     row = QWidget()
@@ -60,12 +61,12 @@ def _slider_row(
     slider = QSlider(Qt.Orientation.Horizontal)
     slider.setRange(minimum, maximum)
     slider.setValue(value)
-    val_lbl = QLabel(f"{value}{suffix}")
+    val_lbl = QLabel(f"{value + display_offset}{suffix}")
     val_lbl.setMinimumWidth(36)
     val_lbl.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
 
     def _sync(v: int) -> None:
-        val_lbl.setText(f"{v}{suffix}")
+        val_lbl.setText(f"{v + display_offset}{suffix}")
 
     slider.valueChanged.connect(_sync)
     layout.addWidget(slider, stretch=1)
@@ -101,8 +102,10 @@ class ConfigEditor(QWidget):
         layout = QVBoxLayout(box)
 
         self._global_row, self._global_slider, _ = _slider_row(
-            "Global:", 0, 18, self._device_cfg.global_sense + 9
+            "Global:", 0, 18, self._device_cfg.global_sense + 9, display_offset=-9
         )
+        self._global_slider.setTickPosition(QSlider.TickPosition.TicksBelow)
+        self._global_slider.setTickInterval(9)
         self._global_slider.valueChanged.connect(self._on_edit)
         layout.addWidget(self._global_row)
 
@@ -173,9 +176,16 @@ class ConfigEditor(QWidget):
         btn_col = QVBoxLayout()
         self._capture_ir_btn = QPushButton("Capture IR baseline")
         self._recalc_btn = QPushButton("Recalc touch")
-        self._factory_btn = QPushButton("Factory reset")
-        for btn in (self._capture_ir_btn, self._recalc_btn, self._factory_btn):
+        self._factory_btn = QPushButton("Factory reset…")
+        self._factory_btn.setStyleSheet(
+            "QPushButton { color: #d9534f; border: 1px solid #6b2020; }"
+            "QPushButton:hover { background: #3a1010; }"
+            "QPushButton:disabled { color: #555; border-color: #444; }"
+        )
+        for btn in (self._capture_ir_btn, self._recalc_btn):
             btn_col.addWidget(btn)
+        btn_col.addSpacing(8)
+        btn_col.addWidget(self._factory_btn)
         layout.addLayout(btn_col)
         return box
 

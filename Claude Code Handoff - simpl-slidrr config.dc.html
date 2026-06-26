@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { margin: 0; background: #f5f4f1; font-family: 'IBM Plex Sans', sans-serif; color: #1a1a1a; font-size: 14px; }
+    .doc { max-width: 820px; margin: 0 auto; padding: 52px clamp(20px, 5vw, 64px) 96px; }
+    .doc-frame { width: 100%; border-collapse: collapse; }
+    .doc-frame td { padding: 0; }
+    .hdr-space, .ftr-space { display: none; }
+    h1, h2, h3 { text-wrap: balance; }
+    p, li { text-wrap: pretty; line-height: 1.65; }
+    @page { size: letter; margin: 0; }
+    @media print {
+      html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      html, body { margin: 0; padding: 0; }
+      .doc { max-width: none !important; margin: 0 !important; padding: 0 0.75in !important; }
+      .hdr-space, .ftr-space { display: table-cell; height: 0.75in; }
+      h2 { break-after: avoid; }
+      .task { break-inside: avoid; }
+      .screen-only { display: none !important; }
+    }
+
+    .meta { font-size: 12px; color: #888; margin: 0 0 4px; letter-spacing: 0.05em; text-transform: uppercase; font-weight: 500; }
+    h1 { font-size: 26px; font-weight: 600; margin: 0 0 6px; }
+    .subtitle { font-size: 14px; color: #555; margin: 0 0 36px; line-height: 1.6; }
+    h2 { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.09em; color: #777; margin: 44px 0 14px; padding-bottom: 8px; border-bottom: 1px solid #ddd; }
+    p { margin: 0 0 10px; font-size: 14px; }
+
+    .badge { display: inline-block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; padding: 2px 7px; border-radius: 3px; vertical-align: middle; margin-right: 6px; flex-shrink: 0; }
+    .badge-crit { background: #fde8e6; color: #b52b1e; }
+    .badge-mid  { background: #fef3e2; color: #c07015; }
+    .badge-low  { background: #e8f5ec; color: #256b3e; }
+
+    .task { background: #fff; border: 1px solid #e2e0dc; border-radius: 6px; margin-bottom: 12px; overflow: hidden; }
+    .task-header { padding: 13px 18px 11px; border-bottom: 1px solid #eee; display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .task-title { font-size: 14px; font-weight: 600; margin: 0; display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
+    .task-file { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #aaa; white-space: nowrap; flex-shrink: 0; }
+    .task-body { padding: 12px 18px 14px; }
+    .task-body > p { font-size: 13.5px; color: #444; margin-bottom: 10px; }
+
+    .code-wrap { margin: 8px 0 12px; }
+    .code-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: #bbb; margin-bottom: 4px; }
+    pre {
+      margin: 0; background: #1a1a1a; color: #d4d4d4;
+      font-family: 'IBM Plex Mono', monospace; font-size: 12px; line-height: 1.65;
+      padding: 12px 14px; border-radius: 5px; overflow-x: auto; white-space: pre;
+    }
+    .r { color: #f28b82; }
+    .g { color: #81c995; }
+    .d { color: #6a9955; font-style: italic; }
+    .k { color: #9cdcfe; }
+    .s { color: #ce9178; }
+    .kw { color: #c586c0; }
+    .fn { color: #dcdcaa; }
+    .n { color: #b5cea8; }
+
+    code { font-family: 'IBM Plex Mono', monospace; font-size: 12px; background: #efefed; padding: 1px 5px; border-radius: 3px; color: #333; }
+    .obs { background: #fffbe6; border: 1px solid #e8d45a; border-radius: 4px; padding: 8px 12px; font-size: 12.5px; color: #6b5000; margin-bottom: 10px; }
+    .obs strong { font-weight: 600; }
+    .toc { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 24px; margin-bottom: 36px; }
+    .toc-item { font-size: 13px; color: #555; display: flex; align-items: center; gap: 6px; }
+    .toc-num { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #bbb; width: 18px; flex-shrink: 0; }
+  </style>
+</helmet>
+
+<main class="doc">
+  <table class="doc-frame" role="presentation">
+    <thead><tr><td class="hdr-space"></td></tr></thead>
+    <tbody><tr><td>
+
+      <p class="meta">Claude Code Handoff · June 2026</p>
+      <h1>simpl-slidrr config — fix list</h1>
+      <p class="subtitle">17 issues in priority order. Each task includes the file, current code, and a concrete PySide6 fix.<br>No new dependencies required.</p>
+
+      <div class="toc">
+        <div class="toc-item"><span class="toc-num">01</span><span><span class="badge badge-crit">C</span>Apply vs Save distinction invisible</span></div>
+        <div class="toc-item"><span class="toc-num">02</span><span><span class="badge badge-crit">C</span>Factory Reset — no danger styling</span></div>
+        <div class="toc-item"><span class="toc-num">03</span><span><span class="badge badge-crit">C</span>Global slider shows wrong range</span></div>
+        <div class="toc-item"><span class="toc-num">04</span><span><span class="badge badge-crit">C</span>No guidance when disconnected</span></div>
+        <div class="toc-item"><span class="toc-num">05</span><span><span class="badge badge-mid">U</span>Toolbar has no visual hierarchy</span></div>
+        <div class="toc-item"><span class="toc-num">06</span><span><span class="badge badge-mid">U</span>Errors vanish with no log</span></div>
+        <div class="toc-item"><span class="toc-num">07</span><span><span class="badge badge-mid">U</span>AIME mode labels are opaque</span></div>
+        <div class="toc-item"><span class="toc-num">08</span><span><span class="badge badge-mid">U</span>Advanced dialog 900px min-width</span></div>
+        <div class="toc-item"><span class="toc-num">09</span><span><span class="badge badge-mid">U</span>Per-key spinboxes look read-only</span></div>
+        <div class="toc-item"><span class="toc-num">10</span><span><span class="badge badge-mid">U</span>No feedback during long operations</span></div>
+        <div class="toc-item"><span class="toc-num">11</span><span><span class="badge badge-mid">U</span>"Recalc touch" label too terse</span></div>
+        <div class="toc-item"><span class="toc-num">12</span><span><span class="badge badge-low">P</span>Frame counter is noise</span></div>
+        <div class="toc-item"><span class="toc-num">13</span><span><span class="badge badge-low">P</span>Key tiles — no value context</span></div>
+        <div class="toc-item"><span class="toc-num">14</span><span><span class="badge badge-low">P</span>AIR bars don't show trigger threshold</span></div>
+        <div class="toc-item"><span class="toc-num">15</span><span><span class="badge badge-low">P</span>Hint text only in one panel</span></div>
+        <div class="toc-item"><span class="toc-num">16</span><span><span class="badge badge-low">P</span>Window title ignores connection state</span></div>
+        <div class="toc-item"><span class="toc-num">17</span><span><span class="badge badge-low">P</span>Branding header wastes toolbar space</span></div>
+      </div>
+
+      <h2>Critical — C</h2>
+
+      <!-- 01 -->
+      <div class="task">
+        <div class="task-header">
+          <p class="task-title"><span class="badge badge-crit">01</span>Apply vs Save distinction is invisible</p>
+          <span class="task-file">main_window.py · _build_toolbar</span>
+        </div>
+        <div class="task-body">
+          <p>Apply → volatile RAM (lost on power cycle). Save → flash (persistent). This is the most consequential distinction in the app and is only documented in a hover tooltip on Apply. Users who never hover it will lose all config.</p>
+          <div class="code-wrap">
+            <div class="code-label">Current</div>
+<pre><span class="k">self</span>.<span class="k">_apply_btn</span> = <span class="fn">QPushButton</span>(<span class="s">"Apply"</span>)
+<span class="k">self</span>.<span class="k">_apply_btn</span>.<span class="fn">setToolTip</span>(<span class="s">"Send dirty config sections to device (RAM; auto-save ~5s)"</span>)
+<span class="d"># …</span>
+<span class="k">self</span>.<span class="k">_save_btn</span> = <span class="fn">QPushButton</span>(<span class="s">"Save"</span>)</pre>
+          </div>
+          <div class="code-wrap">
+            <div class="code-label">Fix</div>
+<pre><span class="d"># 1. Rename so the distinction is in the label itself</span>
+<span class="k">self</span>.<span class="k">_apply_btn</span> = <span class="fn">QPushButton</span>(<span class="s">"Apply to device"</span>)
+<span class="k">self</span>.<span class="k">_apply_btn</span>.<span class="fn">setToolTip</span>(<span class="s">"Writes changes to device RAM only. Power cycle will revert unless you also Save."</span>)
+<span class="k">self</span>.<span class="k">_save_btn</span> = <span class="fn">QPushButton</span>(<span class="s">"Save to flash"</span>)
+<span class="k">self</span>.<span class="k">_save_btn</span>.<span class="fn">setToolTip</span>(<span class="s">"Persists the current device config to non-volatile flash."</span>)
+
+<span class="d"># 2. Add a persistent "unsaved" indicator in the toolbar</span>
+<span class="k">self</span>.<span class="k">_unsaved_label</span> = <span class="fn">QLabel</span>(<span class="s">"● unsaved"</span>)
+<span class="k">self</span>.<span class="k">_unsaved_label</span>.<span class="fn">setStyleSheet</span>(<span class="s">"color: #f0a040; font-size: 11px; padding: 0 4px;"</span>)
+<span class="k">self</span>.<span class="k">_unsaved_label</span>.<span class="fn">setVisible</span>(<span class="kw">False</span>)
+tb.<span class="fn">addWidget</span>(<span class="k">self</span>.<span class="k">_unsaved_label</span>)
+
+<span class="d"># 3. Toggle the indicator in _update_apply_enabled()</span>
+<span class="k">self</span>.<span class="k">_unsaved_label</span>.<span class="fn">setVisible</span>(connected <span class="kw">and</span> dirty)</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- 02 -->
+      <div class="task">
+        <div class="task-header">
+          <p class="task-title"><span class="badge badge-crit">02</span>Factory Reset has no danger styling, wrong default button</p>
+          <span class="task-file">config_editor.py · _build_device_panel &amp; main_window.py · _factory_reset</span>
+        </div>
+        <div class="task-body">
+          <p>Styled identically to safe buttons. The confirmation dialog also defaults to Yes — pressing Enter too quickly after triggering it will wipe the config immediately.</p>
+          <div class="code-wrap">
+            <div class="code-label">Current</div>
+<pre><span class="k">self</span>.<span class="k">_factory_btn</span> = <span class="fn">QPushButton</span>(<span class="s">"Factory reset"</span>)
+
+<span class="d"># In _factory_reset() — standard dialog defaults to Yes:</span>
+answer = <span class="fn">QMessageBox.question</span>(
+    <span class="k">self</span>, <span class="s">"Factory reset"</span>, <span class="s">"Restore all settings…"</span>,
+    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+)</pre>
+          </div>
+          <div class="code-wrap">
+            <div class="code-label">Fix</div>
+<pre><span class="d"># 1. Style the button with a red tint</span>
+<span class="k">self</span>.<span class="k">_factory_btn</span> = <span class="fn">QPushButton</span>(<span class="s">"Factory reset…"</span>)
+<span class="k">self</span>.<span class="k">_factory_btn</span>.<span class="fn">setStyleSheet</span>(
+    <span class="s">"QPushButton { color: #d9534f; border: 1px solid #6b2020; }"</span>
+    <span class="s">"QPushButton:hover { background: #3a1010; }"</span>
+    <span class="s">"QPushButton:disabled { color: #555; border-color: #444; }"</span>
+)
+<span class="d"># Add spacing above it in btn_col to separate from safe buttons</span>
+btn_col.<span class="fn">addSpacing</span>(<span class="n">8</span>)
+
+<span class="d"># 2. Build the dialog manually so No is the default</span>
+msg = <span class="fn">QMessageBox</span>(<span class="k">self</span>.<span class="fn">window</span>())
+msg.<span class="fn">setWindowTitle</span>(<span class="s">"Factory reset"</span>)
+msg.<span class="fn">setText</span>(<span class="s">"Restore all settings to firmware defaults and save immediately?\nThis cannot be undone."</span>)
+msg.<span class="fn">setStandardButtons</span>(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+msg.<span class="fn">setDefaultButton</span>(QMessageBox.StandardButton.No)  <span class="d"># ← safe default</span>
+<span class="kw">if</span> msg.<span class="fn">exec</span>() == QMessageBox.StandardButton.Yes:
+    <span class="k">self</span>.<span class="k">_worker</span>.<span class="k">factory_reset_requested</span>.<span class="fn">emit</span>()</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- 03 -->
+      <div class="task">
+        <div class="task-header">
+          <p class="task-title"><span class="badge badge-crit">03</span>Global sensitivity slider shows 0–18 with no indication of neutral</p>
+          <span class="task-file">config_editor.py · _build_touch_panel &amp; _slider_row</span>
+        </div>
+        <div class="task-body">
+          <div class="obs"><strong>Seen in screenshot:</strong> Disconnected default shows "9" — the raw midpoint. A new user has no idea 9 means "unchanged", anything below reduces sensitivity, anything above boosts it.</div>
+          <p>The slider maps firmware value −9…+9 onto widget range 0…18. The live readout shows the raw widget value, not the meaningful firmware value.</p>
+          <div class="code-wrap">
+            <div class="code-label">Current — _slider_row helper</div>
+<pre><span class="kw">def</span> <span class="fn">_slider_row</span>(label, minimum, maximum, value, suffix=<span class="s">""</span>):
+    <span class="d"># …</span>
+    val_lbl.<span class="fn">setText</span>(<span class="s">f"</span>{value}<span class="s">{suffix}"</span>)
+    <span class="kw">def</span> <span class="fn">_sync</span>(v): val_lbl.<span class="fn">setText</span>(<span class="s">f"</span>{v}<span class="s">{suffix}"</span>)
+    <span class="d"># …</span></pre>
+          </div>
+          <div class="code-wrap">
+            <div class="code-label">Fix — add display_offset param to _slider_row</div>
+<pre><span class="kw">def</span> <span class="fn">_slider_row</span>(label, minimum, maximum, value, suffix=<span class="s">""</span>, display_offset=<span class="n">0</span>):
+    <span class="d"># …</span>
+    val_lbl.<span class="fn">setText</span>(<span class="s">f"</span>{value + display_offset}<span class="s">{suffix}"</span>)
+    <span class="kw">def</span> <span class="fn">_sync</span>(v): val_lbl.<span class="fn">setText</span>(<span class="s">f"</span>{v + display_offset}<span class="s">{suffix}"</span>)
+    <span class="d"># …</span>
+
+<span class="d"># Call with offset=-9 so readout shows -9…0…+9</span>
+<span class="k">self</span>.<span class="k">_global_row</span>, <span class="k">self</span>.<span class="k">_global_slider</span>, _ = <span class="fn">_slider_row</span>(
+    <span class="s">"Global sensitivity:"</span>, <span class="n">0</span>, <span class="n">18</span>,
+    <span class="k">self</span>.<span class="k">_device_cfg</span>.<span class="k">global_sense</span> + <span class="n">9</span>,
+    display_offset=<span class="n">-9</span>,
+)
+
+<span class="d"># Add a tick mark at position 9 (=neutral) so it's visible on the slider track</span>
+<span class="k">self</span>.<span class="k">_global_slider</span>.<span class="fn">setTickPosition</span>(QSlider.TickPosition.TicksBelow)
+<span class="k">self</span>.<span class="k">_global_slider</span>.<span class="fn">setTickInterval</span>(<span class="n">9</span>)  <span class="d"># ticks at 0, 9 (neutral), 18</span></pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- 04 -->
+      <div class="task">
+        <div class="task-header">
+          <p class="task-title"><span class="badge badge-crit">04</span>Disconnected state gives no first-run guidance</p>
+          <span class="task-file">main_window.py · _build_central &amp; _set_connected_ui</span>
+        </div>
+        <div class="task-body">
+          <p>When disconnected the central area shows the telemetry panel (with dashes) and disabled config controls, but nothing explains why controls are greyed out or what to do. A first-time user won't know the required flow.</p>
+          <div class="code-wrap">
+            <div class="code-label">Fix — add a small guidance label, shown only when disconnected</div>
+<pre><span class="d"># In _build_central(), create a guidance widget</span>
+<span class="k">self</span>.<span class="k">_connect_hint</span> = <span class="fn">QLabel</span>(
+    <span class="s">"To get started:  1. Plug in the device via USB  ·  "</span>
+    <span class="s">"2. Click Refresh  ·  3. Select the port  ·  4. Click Connect"</span>
+)
+<span class="k">self</span>.<span class="k">_connect_hint</span>.<span class="fn">setAlignment</span>(Qt.AlignmentFlag.AlignCenter)
+<span class="k">self</span>.<span class="k">_connect_hint</span>.<span class="fn">setStyleSheet</span>(<span class="s">"color: #555; font-size: 12px; padding: 8px 0;"</span>)
+layout.<span class="fn">addWidget</span>(<span class="k">self</span>.<span class="k">_connect_hint</span>)
+
+<span class="d"># In _set_connected_ui(), toggle it</span>
+<span class="k">self</span>.<span class="k">_connect_hint</span>.<span class="fn">setVisible</span>(<span class="kw">not</span> connected)</pre>
+          </div>
+        </div>
+      </div>
+
+      <h2>Usability — U</h2>
+
+      <!-- 05 -->
+      <div class="task">
+        <div class="task-header">
+          <p class="task-title"><span class="badge badge-mid">05</span>Toolbar has no visual hierarchy</p>
+          <span class="task-file">main_window.py · _build_toolbar</span>
+        </div>
+        <div class="task-body">
+          <div class="obs"><strong>Seen in screenshot:</strong> Disconnect has a slightly darker fill already — good base. Apply, Reload, Save are visually identical but have very different frequency of use.</div>
+          <p>Connect/Disconnect is the gating primary action. Apply is the most-used secondary action. Reload is occasional. They should not all look the same.</p>
+          <div class="code-wrap">
+            <div class="code-label">Fix — apply role-based styles after building the toolbar</div>
+<pre><span class="d"># Primary: Connect / Disconnect</span>
+<span class="k">self</span>.<span class="k">_connect_btn</span>.<span class="fn">setStyleSheet</span>(
+    <span class="s">"QPushButton { background: #1a5fa8; color: white; border: none; padding: 4px 14px; font-weight: 600; }"</span>
+    <span class="s">"QPushButton:hover { background: #1e72c8; }"</span>
+)
+
+<span class="d"># Secondary: Apply to device (outlined, accent colour)</span>
+<span class="k">self</span>.<span class="k">_apply_btn</span>.<span class="fn">setStyleSheet</span>(
+    <span class="s">"QPushButton { border: 1px solid #1a5fa8; color: #8ab4f8; padding: 4px 12px; }"</span>
+    <span class="s">"QPushButton:hover { background: #152a44; }"</span>
+    <span class="s">"QPushButton:disabled { border-color: #3a3a3a; color: #555; }"</span>
+)
+
+<span class="d"># Tertiary: Reload — de-emphasise slightly</span>
+<span class="k">self</span>.<span class="k">_reload_btn</span>.<span class="fn">setStyleSheet</span>(<span class="s">"QPushButton { color: #888; }"</span>)</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- 06 -->
+      <div class="task">
+        <div class="task-header">
+          <p class="task-title"><span class="badge badge-mid">06</span>Errors are ephemeral — vanish after 8s, no visual distinction</p>
+          <span class="task-file">main_window.py · _on_error &amp; _restore_connection_status</span>
+        </div>
+        <div class="task-body">
+          <p>Error messages use the same label and same colour as normal status text. They disappear silently after 8 seconds with no way to copy them.</p>
+          <div class="code-wrap">
+            <div class="code-label">Current</div>
+<pre><span class="kw">def</span> <span class="fn">_on_error</span>(<span class="k">self</span>, message: str) -> <span class="kw">None</span>:
+    <span class="k">self</span>.<span class="fn">_show_status</span>(message, <span class="n">8000</span>)</pre>
+          </div>
+          <div class="code-wrap">
+            <div class="code-label">Fix — colour errors distinctly and reset style on restore</div>
+<pre><span class="kw">def</span> <span class="fn">_on_error</span>(<span class="k">self</span>, message: str) -> <span class="kw">None</span>:
+    <span class="k">self</span>.<span class="k">_conn_label</span>.<span class="fn">setStyleSheet</span>(<span class="s">"color: #f08040; font-weight: 500;"</span>)
+    <span class="k">self</span>.<span class="fn">_show_status</span>(<span class="s">f"⚠ </span>{message}<span class="s">"</span>, <span class="n">10_000</span>)
+
+<span class="kw">def</span> <span class="fn">_restore_connection_status</span>(<span class="k">self</span>) -> <span class="kw">None</span>:
+    <span class="k">self</span>.<span class="k">_conn_label</span>.<span class="fn">setStyleSheet</span>(<span class="s">""</span>)  <span class="d"># clear error colour</span>
+    <span class="kw">if</span> <span class="k">self</span>.<span class="k">_connected_port</span>:
+        <span class="k">self</span>.<span class="k">_conn_label</span>.<span class="fn">setText</span>(<span class="s">f"Connected to </span>{<span class="k">self</span>.<span class="k">_connected_port</span>}<span class="s">"</span>)
+    <span class="kw">else</span>:
+        <span class="k">self</span>.<span class="k">_conn_label</span>.<span class="fn">setText</span>(<span class="s">"Disconnected"</span>)</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- 07 -->
+      <div class="task">
+        <div class="task-header">
+          <p class="task-title"><span class="badge badge-mid">07</span>AIME mode and Virtual AIC have no descriptions</p>
+          <span class="task-file">config_editor.py · _build_system_panel</span>
+        </div>
+        <div class="task-body">
+          <p>"Mode 0" / "Mode 1" and "Virtual AIC" are opaque to anyone not already familiar with the firmware internals.</p>
+          <div class="code-wrap">
+            <div class="code-label">Fix — rename items and add tooltips (fill in real descriptions)</div>
+<pre><span class="k">self</span>.<span class="k">_aime_mode</span>.<span class="fn">addItems</span>([
+    <span class="s">"Mode 0 — &lt;describe mode 0&gt;"</span>,
+    <span class="s">"Mode 1 — &lt;describe mode 1&gt;"</span>,
+])
+<span class="k">self</span>.<span class="k">_aime_mode</span>.<span class="fn">setToolTip</span>(<span class="s">"&lt;Explain what AIME mode controls&gt;"</span>)
+<span class="k">self</span>.<span class="k">_aime_virtual</span>.<span class="fn">setToolTip</span>(<span class="s">"&lt;Explain what Virtual AIC enables&gt;"</span>)</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- 08 -->
+      <div class="task">
+        <div class="task-header">
+          <p class="task-title"><span class="badge badge-mid">08</span>Advanced dialog minimum width is 900px — nearly full window</p>
+          <span class="task-file">config_editor.py · _create_advanced_dialog</span>
+        </div>
+        <div class="task-body">
+          <p>The main window is 980px wide by default. The advanced dialog's 900px minimum means it barely fits, and on smaller screens or resized windows it overflows.</p>
+          <div class="code-wrap">
+            <div class="code-label">Current</div>
+<pre>dlg.<span class="fn">setMinimumSize</span>(<span class="n">900</span>, <span class="n">380</span>)
+<span class="d"># …</span>
+spin.<span class="fn">setFixedWidth</span>(<span class="n">50</span>)  <span class="d"># 16 cols × 50px + gaps = ~820px</span></pre>
+          </div>
+          <div class="code-wrap">
+            <div class="code-label">Fix — reduce spinbox width; lower minimum</div>
+<pre>dlg.<span class="fn">setMinimumSize</span>(<span class="n">640</span>, <span class="n">380</span>)  <span class="d"># fits on a 720p screen</span>
+<span class="d"># …</span>
+spin.<span class="fn">setFixedWidth</span>(<span class="n">38</span>)  <span class="d"># 16 × 38 + 15×2 gaps = ~638px</span>
+
+<span class="d"># Optional: wrap the key grid in a scroll area as a safety net</span>
+scroll = <span class="fn">QScrollArea</span>()
+scroll.<span class="fn">setWidgetResizable</span>(<span class="kw">True</span>)
+scroll.<span class="fn">setWidget</span>(keys_wrap)
+scroll.<span class="fn">setFrameShape</span>(QFrame.Shape.NoFrame)
+keys_outer.<span class="fn">addWidget</span>(scroll)</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- 09 -->
+      <div class="task">
+        <div class="task-header">
+          <p class="task-title"><span class="badge badge-mid">09</span>Per-key spinboxes look non-interactive (NoButtons)</p>
+          <span class="task-file">config_editor.py · _create_advanced_dialog</span>
+        </div>
+        <div class="task-body">
+          <p><code>NoButtons</code> makes editable spinboxes indistinguishable from the read-only IR baseline spinboxes. The IR spinboxes should be styled differently to create contrast, not the editable ones stripped.</p>
+          <div class="code-wrap">
+            <div class="code-label">Current</div>
+<pre>spin.<span class="fn">setButtonSymbols</span>(QAbstractSpinBox.ButtonSymbols.NoButtons)
+<span class="d"># IR baselines (read-only) use the same default style</span></pre>
+          </div>
+          <div class="code-wrap">
+            <div class="code-label">Fix — remove NoButtons; style read-only spinboxes instead</div>
+<pre><span class="d"># Per-key spins: restore default (keep buttons, they're editable)</span>
+<span class="d"># Remove the setButtonSymbols line entirely, OR keep NoButtons and add a border:</span>
+spin.<span class="fn">setStyleSheet</span>(<span class="s">"QSpinBox { border: 1px solid #4a90d9; }"</span>)
+
+<span class="d"># IR baseline spins — visually mark them as read-only</span>
+<span class="kw">for</span> spin <span class="kw">in</span> <span class="k">self</span>.<span class="k">_ir_base_spins</span>:
+    spin.<span class="fn">setStyleSheet</span>(<span class="s">"QSpinBox { background: #2a2a2a; color: #666; border: 1px solid #333; }"</span>)</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- 10 -->
+      <div class="task">
+        <div class="task-header">
+          <p class="task-title"><span class="badge badge-mid">10</span>No feedback during long operations</p>
+          <span class="task-file">device_worker.py · _run_op &amp; main_window.py · _on_operation_finished</span>
+        </div>
+        <div class="task-body">
+          <p>"Capture IR baseline" and "Factory reset" pause the poll timer and block the worker briefly. During this time the UI is silent — no spinner, no status update. Users may click again assuming it hung.</p>
+          <div class="code-wrap">
+            <div class="code-label">Fix — emit a start status from MainWindow before triggering each operation</div>
+<pre><span class="d"># In MainWindow, wrap each button connection with a pre-emit status:</span>
+<span class="k">self</span>.<span class="k">_config_editor</span>.<span class="k">_capture_ir_btn</span>.<span class="fn">clicked</span>.<span class="fn">connect</span>(
+    <span class="kw">lambda</span>: (
+        <span class="k">self</span>.<span class="fn">_show_status</span>(<span class="s">"Capturing IR baseline…"</span>),
+        <span class="k">self</span>.<span class="k">_worker</span>.<span class="k">capture_ir_requested</span>.<span class="fn">emit</span>(),
+    )
+)
+<span class="k">self</span>.<span class="k">_config_editor</span>.<span class="k">_recalc_btn</span>.<span class="fn">clicked</span>.<span class="fn">connect</span>(
+    <span class="kw">lambda</span>: (
+        <span class="k">self</span>.<span class="fn">_show_status</span>(<span class="s">"Recalculating touch baseline…"</span>),
+        <span class="k">self</span>.<span class="k">_worker</span>.<span class="k">recalc_touch_requested</span>.<span class="fn">emit</span>(),
+    )
+)
+
+<span class="d"># _on_operation_finished already updates status — no change needed there</span></pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- 11 -->
+      <div class="task">
+        <div class="task-header">
+          <p class="task-title"><span class="badge badge-mid">11</span>"Recalc touch" button label is too terse</p>
+          <span class="task-file">config_editor.py · _build_device_panel</span>
+        </div>
+        <div class="task-body">
+          <p>"Recalc touch" doesn't explain what is being recalculated or when to use it.</p>
+          <div class="code-wrap">
+            <div class="code-label">Fix</div>
+<pre><span class="k">self</span>.<span class="k">_recalc_btn</span> = <span class="fn">QPushButton</span>(<span class="s">"Recalibrate touch"</span>)
+<span class="k">self</span>.<span class="k">_recalc_btn</span>.<span class="fn">setToolTip</span>(
+    <span class="s">"Re-scans all electrodes at rest and sets new idle thresholds.\n"</span>
+    <span class="s">"Make sure nothing is touching the slider before running."</span>
+)</pre>
+          </div>
+        </div>
+      </div>
+
+      <h2>Polish — P</h2>
+
+      <!-- 12 -->
+      <div class="task">
+        <div class="task-header">
+          <p class="task-title"><span class="badge badge-low">12</span>Frame counter in footer is noise</p>
+          <span class="task-file">main_window.py · _on_telemetry &amp; _on_disconnected</span>
+        </div>
+        <div class="task-body">
+          <p>An ever-incrementing integer ("Frame: 22712") is meaningless to most users. Its real purpose is confirming that streaming is alive.</p>
+          <div class="code-wrap">
+            <div class="code-label">Fix — replace with a streaming indicator</div>
+<pre><span class="d"># In _on_telemetry:</span>
+active = <span class="fn">bin</span>(telem.touch_bitmap).<span class="fn">count</span>(<span class="s">"1"</span>)
+<span class="k">self</span>.<span class="k">_stats_label</span>.<span class="fn">setText</span>(<span class="s">f"● Streaming   Touches: </span>{active}<span class="s">"</span>)
+<span class="k">self</span>.<span class="k">_stats_label</span>.<span class="fn">setStyleSheet</span>(<span class="s">"color: #6fcf97;"</span>)  <span class="d"># green dot</span>
+
+<span class="d"># In _on_disconnected:</span>
+<span class="k">self</span>.<span class="k">_stats_label</span>.<span class="fn">setText</span>(<span class="s">"Touches: —"</span>)
+<span class="k">self</span>.<span class="k">_stats_label</span>.<span class="fn">setStyleSheet</span>(<span class="s">""</span>)</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- 13 -->
+      <div class="task">
+        <div class="task-header">
+          <p class="task-title"><span class="badge badge-low">13</span>Key tiles show raw ADC values with no scale reference</p>
+          <span class="task-file">telemetry_panel.py · _KeyTile</span>
+        </div>
+        <div class="task-body">
+          <p>A tile showing "644" vs "234" (touched) looks the same at a glance — both are just numbers. Adding a fill bar makes the relative reading immediately spatial.</p>
+          <div class="code-wrap">
+            <div class="code-label">Fix — add a thin fill bar inside each tile</div>
+<pre><span class="d"># In _KeyTile.__init__, add a fill bar widget</span>
+<span class="k">self</span>.<span class="k">_bar</span> = <span class="fn">QFrame</span>(<span class="k">self</span>)
+<span class="k">self</span>.<span class="k">_bar</span>.<span class="fn">setFixedHeight</span>(<span class="n">3</span>)
+<span class="k">self</span>.<span class="k">_bar</span>.<span class="fn">setStyleSheet</span>(<span class="s">"background: #4a4a4a; border-radius: 1px;"</span>)
+layout.<span class="fn">insertWidget</span>(<span class="n">0</span>, <span class="k">self</span>.<span class="k">_bar</span>)
+
+<span class="d"># In set_state, resize the bar proportionally (max ~4095 for 12-bit ADC)</span>
+<span class="kw">def</span> <span class="fn">set_state</span>(<span class="k">self</span>, raw: int, touched: bool) -> <span class="kw">None</span>:
+    <span class="k">self</span>.<span class="k">_raw</span>.<span class="fn">setText</span>(<span class="fn">str</span>(raw))
+    ratio = <span class="fn">min</span>(raw / <span class="n">4095</span>, <span class="n">1.0</span>)
+    bar_w = <span class="fn">int</span>((<span class="k">self</span>.<span class="fn">width</span>() - <span class="n">8</span>) * ratio)
+    <span class="k">self</span>.<span class="k">_bar</span>.<span class="fn">setFixedWidth</span>(<span class="fn">max</span>(bar_w, <span class="n">1</span>))
+    <span class="kw">if</span> touched: <span class="k">self</span>.<span class="fn">_apply_active</span>()
+    <span class="kw">else</span>: <span class="k">self</span>.<span class="fn">_apply_idle</span>()</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- 14 -->
+      <div class="task">
+        <div class="task-header">
+          <p class="task-title"><span class="badge badge-low">14</span>AIR sensor bars don't show the trigger threshold</p>
+          <span class="task-file">telemetry_panel.py · _AirStringBar &amp; config_editor.py · _build_system_panel</span>
+        </div>
+        <div class="task-body">
+          <p>The AIR trigger % is configurable in System Config but there's no visual reference in the telemetry bars. Users can't see how close a beam is to tripping.</p>
+          <div class="code-wrap">
+            <div class="code-label">Fix — pass current trigger % to TelemetryPanel and draw a tick</div>
+<pre><span class="d"># In TelemetryPanel.update_telemetry, accept an optional trigger_pct param</span>
+<span class="d"># and forward it to each bar's set_state:</span>
+bar.<span class="fn">set_state</span>(telem.ir_raw[i], <span class="fn">bool</span>(telem.ir_blocked[i]), trigger_pct)
+
+<span class="d"># In _AirStringBar.set_state, draw a marker on the beam:</span>
+<span class="kw">def</span> <span class="fn">set_state</span>(<span class="k">self</span>, raw: int, blocked: bool, trigger_pct: int = <span class="n">20</span>) -> <span class="kw">None</span>:
+    <span class="k">self</span>.<span class="k">_raw</span>.<span class="fn">setText</span>(<span class="fn">str</span>(raw))
+    marker_pos = <span class="fn">int</span>(<span class="k">self</span>.<span class="k">_beam</span>.<span class="fn">width</span>() * trigger_pct / <span class="n">100</span>)
+    colour = _AIR_ACTIVE <span class="kw">if</span> blocked <span class="kw">else</span> _AIR_IDLE
+    <span class="k">self</span>.<span class="k">_beam</span>.<span class="fn">setStyleSheet</span>(
+        <span class="s">f"background: qlineargradient(x1:0,x2:1,"</span>
+        <span class="s">f"stop:0 </span>{colour}<span class="s">, stop:0.98 </span>{colour}<span class="s">);"</span>
+        <span class="s">f"border-right: 2px solid #f0a040;"</span>  <span class="d"># threshold tick</span>
+        <span class="s">f"border-radius: 4px;"</span>
+    )
+    <span class="d"># A cleaner approach: use a QProgressBar or a custom paintEvent</span></pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- 15 -->
+      <div class="task">
+        <div class="task-header">
+          <p class="task-title"><span class="badge badge-low">15</span>Hint text only exists in System Config</p>
+          <span class="task-file">config_editor.py · _build_touch_panel</span>
+        </div>
+        <div class="task-body">
+          <p>System Config has "Delay: 0 = no delay. Recommended 12ms". Touch Sensitivity has nothing — the debounce sliders (0–7) are harder to reason about but have no guidance.</p>
+          <div class="code-wrap">
+            <div class="code-label">Fix — add a matching hint to Touch Sensitivity</div>
+<pre>hint = <span class="fn">QLabel</span>(<span class="s">"Debounce: 0 = fastest response, higher = more stable. Recommended: 2–3."</span>)
+hint.<span class="fn">setWordWrap</span>(<span class="kw">True</span>)
+hint.<span class="fn">setStyleSheet</span>(<span class="s">"color: gray; font-size: 11px;"</span>)
+layout.<span class="fn">addWidget</span>(hint)  <span class="d"># add before addStretch()</span></pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- 16 -->
+      <div class="task">
+        <div class="task-header">
+          <p class="task-title"><span class="badge badge-low">16</span>Window title doesn't reflect connection state</p>
+          <span class="task-file">main_window.py · _on_connected &amp; _on_disconnected</span>
+        </div>
+        <div class="task-body">
+          <p>The title stays "simpl-slidrr config" regardless of whether a device is connected. When the window is backgrounded you can't tell its state at a glance.</p>
+          <div class="code-wrap">
+            <div class="code-label">Fix — one line each in _on_connected and _on_disconnected</div>
+<pre><span class="d"># _on_connected:</span>
+<span class="k">self</span>.<span class="fn">setWindowTitle</span>(<span class="s">f"simpl-slidrr config — </span>{info.<span class="fn">get</span>(<span class="s">'port'</span>)}<span class="s">"</span>)
+
+<span class="d"># _on_disconnected:</span>
+<span class="k">self</span>.<span class="fn">setWindowTitle</span>(<span class="s">"simpl-slidrr config"</span>)</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- 17 -->
+      <div class="task">
+        <div class="task-header">
+          <p class="task-title"><span class="badge badge-low">17</span>Branding header occupies prime vertical real estate</p>
+          <span class="task-file">main_window.py · _build_branding_header &amp; _build_central</span>
+        </div>
+        <div class="task-body">
+          <p>The centred "::simpl-slidrr" label sits between the toolbar and the telemetry panel consuming ~44px in an information-dense tool.</p>
+          <div class="code-wrap">
+            <div class="code-label">Fix — move it to the toolbar as a static left-side label</div>
+<pre><span class="d"># In _build_toolbar(), add before the port combo:</span>
+brand = <span class="fn">QLabel</span>(<span class="s">"  ::simpl-slidrr  "</span>)
+brand.<span class="fn">setStyleSheet</span>(<span class="s">"color: #8ab4f8; font-weight: bold; font-size: 14px;"</span>)
+tb.<span class="fn">addWidget</span>(brand)
+tb.<span class="fn">addSeparator</span>()
+
+<span class="d"># Remove _build_branding_header() and its addWidget call from _build_central()</span></pre>
+          </div>
+        </div>
+      </div>
+
+    </td></tr></tbody>
+    <tfoot><tr><td class="ftr-space"></td></tr></tfoot>
+  </table>
+</main>
+</x-dc>
+</body>
+</html>
