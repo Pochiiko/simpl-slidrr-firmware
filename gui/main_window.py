@@ -27,6 +27,58 @@ from config_editor import ConfigEditor  # noqa: E402
 from device_worker import DeviceWorker  # noqa: E402
 from telemetry_panel import TelemetryPanel  # noqa: E402
 
+_BTN_PRIMARY = (
+    "QPushButton { background: #1565c0; color: #fff; border: none;"
+    " padding: 4px 14px; border-radius: 4px; font-weight: bold; }"
+    "QPushButton:hover { background: #1976d2; }"
+    "QPushButton:pressed { background: #0d47a1; }"
+    "QPushButton:disabled { background: #1a2744; color: #4a5a6a; }"
+)
+_BTN_MUTED = (
+    "QPushButton { background: transparent; color: #9aa0a6; border: 1px solid #3c4043;"
+    " padding: 4px 10px; border-radius: 4px; }"
+    "QPushButton:hover { color: #c0c6cc; border-color: #5a6066; }"
+    "QPushButton:pressed { background: #1a1d20; }"
+    "QPushButton:disabled { color: #555; border-color: #2a2d30; }"
+)
+# Segmented accent pair — left and right halves share a single border between them.
+_BTN_SEG_L = (
+    "QPushButton {"
+    " background: transparent; color: #8ab4f8;"
+    " border-top: 1px solid #4a6fa8; border-bottom: 1px solid #4a6fa8;"
+    " border-left: 1px solid #4a6fa8; border-right: 0px;"
+    " padding: 4px 14px;"
+    " border-top-left-radius: 4px; border-bottom-left-radius: 4px;"
+    " border-top-right-radius: 0px; border-bottom-right-radius: 0px; }"
+    "QPushButton:hover {"
+    " background: #1a2744;"
+    " border-top: 1px solid #8ab4f8; border-bottom: 1px solid #8ab4f8;"
+    " border-left: 1px solid #8ab4f8; border-right: 0px; }"
+    "QPushButton:pressed { background: #162038; }"
+    "QPushButton:disabled {"
+    " color: #3a4a5a;"
+    " border-top: 1px solid #2a3a4a; border-bottom: 1px solid #2a3a4a;"
+    " border-left: 1px solid #2a3a4a; border-right: 0px; }"
+)
+_BTN_SEG_R = (
+    "QPushButton {"
+    " background: transparent; color: #8ab4f8;"
+    " border-top: 1px solid #4a6fa8; border-bottom: 1px solid #4a6fa8;"
+    " border-right: 1px solid #4a6fa8; border-left: 1px solid #2a3a4a;"
+    " padding: 4px 14px;"
+    " border-top-right-radius: 4px; border-bottom-right-radius: 4px;"
+    " border-top-left-radius: 0px; border-bottom-left-radius: 0px; }"
+    "QPushButton:hover {"
+    " background: #1a2744;"
+    " border-top: 1px solid #8ab4f8; border-bottom: 1px solid #8ab4f8;"
+    " border-right: 1px solid #8ab4f8; border-left: 1px solid #4a6fa8; }"
+    "QPushButton:pressed { background: #162038; }"
+    "QPushButton:disabled {"
+    " color: #3a4a5a;"
+    " border-top: 1px solid #2a3a4a; border-bottom: 1px solid #2a3a4a;"
+    " border-right: 1px solid #2a3a4a; border-left: 1px solid #2a3a4a; }"
+)
+
 
 class MainWindow(QMainWindow):
     def __init__(self) -> None:
@@ -68,37 +120,82 @@ class MainWindow(QMainWindow):
         self._thread.wait(3000)
         super().closeEvent(event)
 
+    @staticmethod
+    def _tb_spacer(width: int) -> QWidget:
+        """A fixed-width invisible spacer for breathing room between toolbar items."""
+        spacer = QWidget()
+        spacer.setFixedWidth(width)
+        return spacer
+
     def _build_toolbar(self) -> None:
         tb = QToolBar("Connection")
         self.addToolBar(tb)
 
+        # --- Left: connection controls ---
         self._port_combo = QComboBox()
         self._port_combo.setMinimumWidth(220)
         tb.addWidget(QLabel(" Port: "))
         tb.addWidget(self._port_combo)
 
-        self._refresh_btn = QPushButton("Refresh")
+        tb.addWidget(self._tb_spacer(8))
+
+        self._refresh_btn = QPushButton("↻")
+        self._refresh_btn.setStyleSheet(
+            "QPushButton {"
+            " background: transparent; color: #9aa0a6; border: 1px solid #3c4043;"
+            " padding: 0px; border-radius: 4px;"
+            " font-size: 15px; font-family: 'Segoe UI Symbol'; }"
+            "QPushButton:hover { color: #c0c6cc; border-color: #5a6066; }"
+            "QPushButton:pressed { background: #1a1d20; }"
+            "QPushButton:disabled { color: #555; border-color: #2a2d30; }"
+        )
+        self._refresh_btn.setToolTip("Rescan serial ports")
         self._refresh_btn.clicked.connect(self._refresh_ports)
         tb.addWidget(self._refresh_btn)
 
+        tb.addWidget(self._tb_spacer(8))
+
         self._connect_btn = QPushButton("Connect")
+        self._connect_btn.setStyleSheet(_BTN_PRIMARY)
         self._connect_btn.clicked.connect(self._toggle_connect)
         tb.addWidget(self._connect_btn)
 
-        tb.addSeparator()
-        self._apply_btn = QPushButton("Apply to device")
-        self._apply_btn.setToolTip("Writes changes to device RAM only. Power cycle will revert unless you also Save.")
-        self._apply_btn.clicked.connect(self._apply_config)
-        tb.addWidget(self._apply_btn)
+        # Match the refresh icon button's height to the Connect button so its
+        # box doesn't stand taller than the rest of the nav, and keep it square.
+        _nav_h = self._connect_btn.sizeHint().height()
+        self._refresh_btn.setFixedSize(_nav_h, _nav_h)
 
-        self._reload_btn = QPushButton("Reload")
+        # --- Flexible spacer pushes config actions to the right ---
+        _spacer = QWidget()
+        _spacer.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        tb.addWidget(_spacer)
+
+        # --- Right: Reload (read from device) ---
+        self._reload_btn = QPushButton("Read config")
+        self._reload_btn.setStyleSheet(_BTN_MUTED)
+        self._reload_btn.setToolTip("Re-read the current config from the connected device")
         self._reload_btn.clicked.connect(lambda: self._worker.refresh_requested.emit())
         tb.addWidget(self._reload_btn)
 
+        # --- Right: Apply + Save segmented pair (write to device) ---
+        _seg = QWidget()
+        _seg_row = QHBoxLayout(_seg)
+        _seg_row.setContentsMargins(6, 0, 0, 0)
+        _seg_row.setSpacing(0)
+
+        self._apply_btn = QPushButton("Apply to device")
+        self._apply_btn.setStyleSheet(_BTN_SEG_L)
+        self._apply_btn.setToolTip("Writes changes to device RAM only. Power cycle will revert unless you also Save.")
+        self._apply_btn.clicked.connect(self._apply_config)
+        _seg_row.addWidget(self._apply_btn)
+
         self._save_btn = QPushButton("Save to flash")
+        self._save_btn.setStyleSheet(_BTN_SEG_R)
         self._save_btn.setToolTip("Persists the current device config to non-volatile flash.")
         self._save_btn.clicked.connect(lambda: self._worker.save_requested.emit())
-        tb.addWidget(self._save_btn)
+        _seg_row.addWidget(self._save_btn)
+
+        tb.addWidget(_seg)
 
         self._unsaved_label = QLabel("● unsaved")
         self._unsaved_label.setStyleSheet("color: #f0a040; font-size: 11px; padding: 0 4px;")
